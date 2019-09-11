@@ -1,0 +1,28 @@
+from google.colab import auth
+auth.authenticate_user()
+
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+import shutil
+
+project_id = '<<test>>'
+df = pd.io.gbq.read_gbq('''
+SELECT CUST_CODE, 
+EXACT_COUNT_DISTINCT(BASKET_ID)/EXACT_COUNT_DISTINCT(SHOP_WEEKDAY)  AS VISIT_PER_WEEK,
+EXACT_COUNT_DISTINCT(SHOP_WEEKDAY)  AS TOTAL_WEEK,
+EXACT_COUNT_DISTINCT(PROD_CODE) AS TOTAL_PRODUCT,
+SUM(SPEND) AS TOTAL_SALES, 
+FROM [<<your project name>>:GROCERY.TRANSACTIONS] 
+WHERE CUST_CODE IS NOT NULL GROUP BY CUST_CODE
+HAVING TOTAL_SALES < 4000)
+ ''', project_id=project_id, verbose=False)
+
+shuffled = df.sample(frac=1, random_state=13)
+shuffled.head(5)
+
+predictors = shuffled.iloc[:,1:2]
+predictors[:5]
+
+targets = shuffled.iloc[:,4:5]
+targets[:5]
